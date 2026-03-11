@@ -205,6 +205,9 @@ public class SwiftDeviceCalendarPlugin: NSObject, FlutterPlugin, EKEventViewDele
 
     private func hasPermissions(_ result: FlutterResult) {
         let hasPermissions = hasEventPermissions()
+        if hasPermissions {
+            eventStore.reset()
+        }
         result(hasPermissions)
     }
 
@@ -523,7 +526,7 @@ public class SwiftDeviceCalendarPlugin: NSObject, FlutterPlugin, EKEventViewDele
             return nil
         }
     }
-    
+
     private func parseEKRecurrenceRules(_ ekEvent: EKEvent) -> RecurrenceRule? {
         var recurrenceRule: RecurrenceRule?
         if ekEvent.hasRecurrenceRules {
@@ -1090,6 +1093,7 @@ public class SwiftDeviceCalendarPlugin: NSObject, FlutterPlugin, EKEventViewDele
 
     private func checkPermissionsThenExecute(permissionsGrantedAction: () -> Void, result: @escaping FlutterResult) {
         if hasEventPermissions() {
+            self.eventStore.reset()
             permissionsGrantedAction()
             return
         }
