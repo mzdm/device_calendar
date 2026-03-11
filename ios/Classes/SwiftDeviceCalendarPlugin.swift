@@ -4,6 +4,16 @@ import Flutter
 import Foundation
 import UIKit
 
+private final class EventStoreManager {
+    static let shared = EventStoreManager()
+
+    let eventStore: EKEventStore
+
+    private init() {
+        eventStore = EKEventStore()
+    }
+}
+
 extension Date {
     var millisecondsSinceEpoch: Double { return self.timeIntervalSince1970 * 1000.0 }
 }
@@ -102,7 +112,7 @@ public class SwiftDeviceCalendarPlugin: NSObject, FlutterPlugin, EKEventViewDele
     let calendarNotFoundErrorMessageFormat = "The calendar with the ID %@ could not be found"
     let calendarReadOnlyErrorMessageFormat = "Calendar with ID %@ is read-only"
     let eventNotFoundErrorMessageFormat = "The event with the ID %@ could not be found"
-    var eventStore = EKEventStore()
+    let eventStore = EventStoreManager.shared.eventStore
     let requestPermissionsMethod = "requestPermissions"
     let hasPermissionsMethod = "hasPermissions"
     let retrieveCalendarsMethod = "retrieveCalendars"
@@ -1088,8 +1098,7 @@ public class SwiftDeviceCalendarPlugin: NSObject, FlutterPlugin, EKEventViewDele
 
     private func requestPermissions(_ completion: @escaping (Bool) -> Void) {
         if hasEventPermissions() {
-            // Permission already granted – refresh the store
-            self.eventStore = EKEventStore()
+            self.eventStore.reset()
             completion(true)
             return
         }
@@ -1097,14 +1106,14 @@ public class SwiftDeviceCalendarPlugin: NSObject, FlutterPlugin, EKEventViewDele
         if #available(iOS 17, *) {
             eventStore.requestFullAccessToEvents { (accessGranted, _) in
                 if accessGranted {
-                    self.eventStore = EKEventStore() // refresh store after granting
+                    self.eventStore.reset()
                 }
                 completion(accessGranted)
             }
         } else {
             eventStore.requestAccess(to: .event) { (accessGranted, _) in
                 if accessGranted {
-                    self.eventStore = EKEventStore() // refresh store after granting
+                    self.eventStore.reset()
                 }
                 completion(accessGranted)
             }
